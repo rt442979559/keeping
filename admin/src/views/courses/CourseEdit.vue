@@ -62,7 +62,7 @@ import { defineProps , computed , reactive , ref , onMounted } from 'vue'
 
   const info = async(id) => {
     const data = await coursesInfo(id)
-    ruleForm.value = {...data.data}
+    ruleForm.value = {...data}
   }
 
   onMounted(async() => {

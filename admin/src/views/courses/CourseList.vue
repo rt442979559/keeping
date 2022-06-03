@@ -35,10 +35,10 @@ import { coursesList , coursesRemove } from '@/api/index'
 
   const fetch = async() => {
     const res = await coursesList()
-    list.value = res.data.data
+    list.value = res.data
   }
 
-  const handleRemove = async(id) => {
+  const handleRemove = async(id:string) => {
     try {
       await ElMessageBox.confirm('是否确认删除','提示', 
         {confirmButtonText: '确认',cancelButtonText: '取消',type: 'warning'}

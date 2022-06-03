@@ -1,6 +1,6 @@
 <template>
   <el-container :direction="vertical">
-    <el-header height=""> keeping-后台管理界面 </el-header>
+    <el-header height=""> admin </el-header>
     <el-container :direction="horizontal">
       <el-aside width="200px">
         <el-menu style="height:calc(100vh - 60px)" mode="vertical" :default-active="$route.path" router>

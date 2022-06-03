@@ -3,6 +3,7 @@ import Home from '../views/Home.vue'
 import Main from '../views/Main.vue'
 import CourseList from '../views/courses/CourseList.vue'
 import CourseEdit from '../views/courses/CourseEdit.vue'
+import EpisodeList from '../views/episode/EpisodeList.vue'
 
 const routes = [
   {
@@ -13,6 +14,8 @@ const routes = [
       { name:'course-list', path:'/courses/list', component: CourseList },
       { name:'course-edit', path:'/courses/edit/:id', component: CourseEdit ,props:true},
       { name:'course-create', path:'/courses/create', component: CourseEdit },
+      { name:'course-create', path:'/courses/create', component: CourseEdit },
+      { name:'episode-list', path:'/episode/list', component: EpisodeList },
     ]
   },
 ]

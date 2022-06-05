@@ -5,9 +5,14 @@ import { AdminService } from './admin.service';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { EpisodeModule } from './episode/episode.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
-  imports: [DbModule, UsersModule, CoursesModule, EpisodeModule],
+  imports: [
+    MulterModule.register({
+      dest:'uploads'
+    }),
+    DbModule, UsersModule, CoursesModule, EpisodeModule],
   controllers: [AdminController],
   providers: [AdminService],
 })

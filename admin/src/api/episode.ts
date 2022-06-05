@@ -30,3 +30,11 @@ export function episodeRemove(id:any) {
     method: 'delete',
   })
 }
+
+export function episodeOption(params?:any) {
+  return service({
+    url: `/episode/option`,
+    method: 'get',
+    params
+  })
+}

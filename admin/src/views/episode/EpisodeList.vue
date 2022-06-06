@@ -1,6 +1,7 @@
 <template>
   <div>
     <avue-crud 
+      ref="crudRef"
       class="avue-crud"
       :data="avueData" 
       :page="page"
@@ -12,6 +13,7 @@
       @on-load="changePage"
       @sort-change="sortChange"
       @search-change="searchChange"
+      :upload-before="uploadBefore"
       >
     </avue-crud>
   </div>
@@ -19,8 +21,9 @@
 <script lang='ts' setup>
   import { ref , onMounted } from 'vue'
   import { ElMessageBox ,ElMessage } from 'element-plus';
-  import { episodeList , episodeCreate , episodeUpdata , episodeRemove , episodeOption } from '@/api/episode'
+  import { episodeList , episodeCreate  , episodeUpdata , episodeRemove , episodeOption } from '@/api/episode'
 
+  const crudRef = ref()
   const avueData = ref([])
   const option = ref({})
   const page:any = ref({
@@ -83,13 +86,17 @@
 
   const rowUpdate = async(row , index , done , loading) => {
     loading()
-    const data = {
-      name:row.name,
-      url:row.url,
-    }
+    const data = { ...row }
+    delete data.$index
+
     await episodeUpdata(row['_id'],data)
     ElMessage.success('更新成功')
     fetch()
+    done()
+  }
+
+  const uploadBefore = (file,done) => {
+    console.log(file)
     done()
   }
 

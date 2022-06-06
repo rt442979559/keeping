@@ -13,5 +13,5 @@ export class Episode {
 
   @ApiProperty({ description:'链接' })
   @prop() 
-	url:string
+	cover:string
 }

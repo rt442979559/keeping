@@ -8,13 +8,21 @@
         status-icon
         :rules="rules"
         label-width="120px"
-        class="demo-ruleForm"
+        class="ruleForm"
       >
         <el-form-item label="课程名称" prop="name">
           <el-input v-model="ruleForm.name" />
         </el-form-item>
         <el-form-item label="课程封面图" prop="cover">
-          <el-input v-model="ruleForm.cover" />
+          <el-upload
+            class="avatar-uploader"
+            action="http://localhost:3000/upload/"
+            :on-success="handleAvatarSuccess"
+            :show-file-list="false"
+          >
+            <img v-if="ruleForm.cover" :src="ruleForm.cover" class="avatar" />
+            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+          </el-upload>
         </el-form-item>
 
         <el-form-item>
@@ -28,8 +36,10 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { coursesCreate , coursesInfo , coursesUpdata } from '@/api/index.ts'
 import { defineProps , computed , reactive , ref , onMounted } from 'vue'
+import type { UploadProps } from 'element-plus'
   const router = useRouter()
   const props = defineProps({
     id: {
@@ -37,6 +47,9 @@ import { defineProps , computed , reactive , ref , onMounted } from 'vue'
       default: '',
     },
   })
+  const handleAvatarSuccess: UploadProps['onSuccess'] = (response :any,uploadFile :any) => {
+    ruleForm.value.cover = URL.createObjectURL(uploadFile.raw!)
+  }
 
   const isEdit = computed(() => props.id ? '编辑课程' : '创建课程')
   
@@ -56,7 +69,6 @@ import { defineProps , computed , reactive , ref , onMounted } from 'vue'
     props.id ? await coursesUpdata(props.id , ruleForm.value) : await coursesCreate(ruleForm.value)
     ElMessage.success('保存成功')
     ruleForm.value = form
-    console.log(ruleForm.value);
     router.go(-1)
   }
 
@@ -71,6 +83,33 @@ import { defineProps , computed , reactive , ref , onMounted } from 'vue'
 
 </script>
 
-<style>
+<style scoped>
+.avatar-uploader .avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+</style>
 
+<style>
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+}
 </style>

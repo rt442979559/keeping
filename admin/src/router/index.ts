@@ -4,6 +4,7 @@ import Main from '../views/Main.vue'
 import CourseList from '../views/courses/CourseList.vue'
 import CourseEdit from '../views/courses/CourseEdit.vue'
 import EpisodeList from '../views/episode/EpisodeList.vue'
+import Cesium from '../views/cesium/index.vue'
 
 const routes = [
   {
@@ -16,6 +17,7 @@ const routes = [
       { name:'course-create', path:'/courses/create', component: CourseEdit },
       { name:'course-create', path:'/courses/create', component: CourseEdit },
       { name:'episode-list', path:'/episode/list', component: EpisodeList },
+      { name:'cesium', path:'/cesium/index', component: Cesium },
     ]
   },
 ]

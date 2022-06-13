@@ -63,7 +63,7 @@
     fetch()
     done()
   } 
-  
+
 
   const fetchOption = async() => {
     const data = await episodeOption()

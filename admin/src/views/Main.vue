@@ -52,6 +52,12 @@ export default class Main extends Vue {
           { title: "权限管理", path: "/roles/list" },
         ],
       },
+      {
+        title: "测试",
+        items: [
+          { title: "cesium", path: "/cesium/index" },
+        ],
+      },
     ],
   };
 }

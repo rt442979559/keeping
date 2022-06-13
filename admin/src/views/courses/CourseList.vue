@@ -39,7 +39,7 @@ import { coursesList , coursesRemove } from '@/api/index'
 
   const fetch = async() => {
     const res = await coursesList()
-    list.value = res.data
+    if(res) list.value = res.data
   }
 
   const handleRemove = async(id) => {

@@ -66,10 +66,16 @@ import type { UploadProps } from 'element-plus'
   })
   
   const submitForm = async() => {
-    props.id ? await coursesUpdata(props.id , ruleForm.value) : await coursesCreate(ruleForm.value)
-    ElMessage.success('保存成功')
-    ruleForm.value = form
-    router.go(-1)
+    const request = props.id ? coursesUpdata(props.id , ruleForm.value) : coursesCreate(ruleForm.value)
+    request.then(res => {
+      if(res){
+        router.go(-1)
+        ruleForm.value = form
+        ElMessage.success('保存成功')
+      }else{
+        ElMessage.error('接口报错')
+      }
+    })
   }
 
   const info = async(id) => {

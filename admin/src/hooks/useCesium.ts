@@ -52,13 +52,10 @@ export const useCesium = () => {
 
   // *点击事件
   const handle = () => {
-    const handle = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    handle.setInputAction(function (evt:any) {
-      console.log(viewer);
-      console.log(evt);
-    // let pickRay = viewer.camera.getPickRay(evt.position);
-    // let layers = viewer.imageryLayers.pickImageryLayers(pickRay, viewer.scene)
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
+    handler.setInputAction( (e:any) => {
+      console.log(e);
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
   }
 
 

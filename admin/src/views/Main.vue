@@ -56,6 +56,8 @@ export default class Main extends Vue {
         title: "测试",
         items: [
           { title: "cesium", path: "/cesium/index" },
+          { title: "高德地图", path: "/map/index" },
+          { title: "test", path: "/test/index" },
         ],
       },
     ],

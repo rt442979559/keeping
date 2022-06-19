@@ -8,6 +8,9 @@ import installElementPlus from './plugins/element'
 import Avue from '@smallwei/avue'
 import '@smallwei/avue/lib/index.css'
 
+import 'vue-cropper/dist/index.css'
+import { VueCropper }  from "vue-cropper";
+
 const app = createApp(App)
 installElementPlus(app)
 app.use(router)

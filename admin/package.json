@@ -13,6 +13,9 @@
     "axios": "^0.27.2",
     "core-js": "^3.6.5",
     "element-plus": "^1.0.2-beta.28",
+    "node-sass": "^7.0.1",
+    "sass": "^1.53.0",
+    "sass-loader": "^8.0.0",
     "vue": "^3.0.0",
     "vue-class-component": "^8.0.0-0",
     "vue-cropper": "^1.0.3",
@@ -49,7 +52,9 @@
       "parser": "@typescript-eslint/parser"
     },
     "rules": {
-      "no-unused-vars": "off"
+      "no-undef":"off",
+      "no-unused-vars": "off",
+      "vue/no-mutating-props": "off"
     }
   },
   "browserslist": [

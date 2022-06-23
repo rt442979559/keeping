@@ -1,6 +1,12 @@
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
 module.exports = {
+    pluginOptions:{
+      'style-resources-loader':{
+        preProcessor:'scss',
+        patterns:[]
+      }
+    },
     configureWebpack: {
         plugins: [
             //copy-webpack-plugin 5.x 的写法

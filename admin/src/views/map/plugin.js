@@ -9,7 +9,7 @@ export const plugin = () => new Promise(function(resolve, reject) {
 
   const script = document.createElement('script')
 
-  script.src = '//webapi.amap.com/maps?v=1.4.15&key=70bbab8190278aa4d480db8757c678be6'
+  script.src = '//webapi.amap.com/maps?v=1.4.15&key=d3b369f37bc25183a31cc7e3864000c6	'
   document.body.appendChild(script)
 
   // window.onload = () => {

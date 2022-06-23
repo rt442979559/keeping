@@ -1,7 +1,7 @@
 <template>
   <div>
-    <el-button @click="showMap = true">地图选点</el-button>
-    <GaodeMap v-model:visible="showMap" ref="GaodeMapRef" v-model:lonlat="lonlat"  />
+    {{address}}
+    <GaodeMap v-model:visible="showMap" v-model:lonlat="lonlat"  @getAddress="(val) => address = val" />
   </div>
 </template>
 <script lang='ts' setup>
@@ -9,5 +9,7 @@
   import { ref } from 'vue'
 
   const showMap = ref(false)
+  const lonlat = ref('')
+  const address = ref('')
 
 </script>

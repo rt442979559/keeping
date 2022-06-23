@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <div class="map">
+    <div id="container-mini" :style="{ height:mapOption?.height || '150px' , width:mapOption?.width || '150px' }"></div>
+    <el-button @click="visible = true">地图选点</el-button>
     <el-dialog
       top="10%"
       width="62%"
@@ -11,33 +13,24 @@
       :destroy-on-close="true"
       >
       <div id="container"></div>
-      <el-input
-        id="search-input"
-        v-model="searchValue"
-        class="input-with"
-        placeholder="请输入地址"
-        clearable
-        @keyup.enter="handelSearch"
-    />
-    <el-button
-        size="small"
-        type="primary"
-        @click="handelSearch">搜索</el-button>
-        <div id="searchResultPanel" ></div>
+      <div id="pickerBox">
+        <input id="pickerInput" placeholder="输入关键字选取地点" />
+        <div id="poiInfo"></div>
+      </div>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="visible = false">取消</el-button>
-          <el-button type="primary" @click="visible = false">确定</el-button>
+          <el-button type="primary" @click="handleConfirm">确定</el-button>
         </span>
       </template>
     </el-dialog>
   </div>
 </template>
 <script lang='ts' setup>
-  import { ref , computed , watchEffect , defineProps , defineEmits} from 'vue'
+  import { ref , computed , watchEffect, onMounted , defineProps , defineEmits } from 'vue'
   import { plugin } from './plugin.js'
-  const props = defineProps(['visible','lonlat'])
-  const emits = defineEmits(['update:visible','update:lonlat'])
+  const props = defineProps(['visible','lonlat','mapOption'])
+  const emits = defineEmits(['update:visible','update:lonlat','getAddress'])
   const visible = computed({
     get: () => props.visible,
     set: (val) => emits('update:visible', val),
@@ -49,9 +42,11 @@
 
   let map:any = null
   let AMap:any = null
-
-  const startAutoComplete:any  = ref('')
-  const startPlaceSearch:any = ref('')
+  let lnglat:any = []
+  let marker:any = null // 地图标记
+  const AMapUI = (window as any).AMapUI
+  const geocoder:any = ref('') // 地图编码
+  const address:any = ref('') // 地址
 
   const mapInit = async() => {
     const res = await plugin()
@@ -59,181 +54,194 @@
     map = new AMap.Map('container', {
       zoom: 18,
       viewMode: '3D',
-      center: [120.56447, 27.602587],
+      center: lonlat.value || [120.5644,27.6025],
       pitch: 50,
       rotation: 35,
+      resizeEnable: true,
     })
-    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.OverView'], () => {
-      // 工具条
-      const toolbar = new AMap.ToolBar()
-      // 比例尺
-      const scale = new AMap.Scale()
-      // 显示鹰眼
-      const overView = new AMap.OverView()
-      map.addControl(toolbar)
-      map.addControl(scale)
-      map.addControl(overView)
-    })
-
-    // *添加maker
-    setMaker()
-
-    // *添加鼠标单击事件
-    addAmapGeocoder()
-
-    // *添加定位
-    // addAMapGeolocation()
-
-    // *添加检索提示
-    addAMapAutocompletePlaceSearch()
-  }
-
-
-  const formattedAddress = ref('') // 默认地址
-  const position = ref({}) // 地址对应的经纬度信息
-  const marker:any = ref('') // 地图标记
-  const geocoder:any = ref('') // 地址解析
-  const setMaker = () => {
-    marker.value = new AMap.Marker()
-    map.add(marker.value)
-    map.plugin('AMap.Geocoder',() => {
-      geocoder.value = new AMap.Geocoder({
+    marker = new AMap.Marker() // 初始化点位标记
+    map.plugin(['AMap.ToolBar', 'AMap.Scale', 'AMap.OverView','AMap.Geocoder'], () => {
+      map.addControl(new AMap.ToolBar())  // 工具条
+      map.addControl(new AMap.Scale()) // 比例尺
+      map.addControl(new AMap.OverView()) // 显示鹰眼
+      geocoder.value = new AMap.Geocoder({ // 地理编码
         radius: 1000 // 范围，默认：500
       })
+    })
+
+    // 初始化poiPicker
+    AMapUI.loadUI(['misc/PoiPicker'], function(PoiPicker) {
+      var poiPicker = new PoiPicker({
+        input: 'pickerInput'
+      })
+      poiPickerReady(poiPicker)
+    })
+
+    if(lonlat.value && lonlat.value.length > 0){
+      const poi = { 
+        Q:lonlat.value[1],
+        R:lonlat.value[0],
+        lng:lonlat.value[0],
+        lat:lonlat.value[1],
+      } 
+      setMarker(poi)
+      setGeocoder(lonlat.value)
+    }
+    // *鼠标单击经纬度加载点位详情
+    addAmapGeocoder()
+  }
+
+  const poiPickerReady = (poiPicker) => {
+    (window as any).poiPicker = poiPicker
+    //选取了某个POI
+    poiPicker.on('poiPicked', function(poiResult) {
+      const poi = poiResult.item
+      setMarker(poi.location)
+      address.value = poi.address || poi.name
+      marker.setLabel({
+        offset: new AMap.Pixel(1, 0), 
+        content: address.value,
+        direction: 'top', 
+      })
+    })
+    poiPicker.onCityReady(function() {
+      poiPicker.suggest('美食')
     })
   }
 
   const addAmapGeocoder = () => {
-    // map.on('click',handleEvent)
-    // setMaker()
     map.on('click', e => {
-      const lnglat = [e.lnglat.lng, e.lnglat.lat]
-      marker.value.setPosition(lnglat)
-      // geocoder.value.getAddress(lnglat, (status, result) => {
-      //   console.log(status , result)
-      //   if (status === 'complete' && result.regeocode) {
-      //     const res = result.regeocode
-      //     const data = {
-      //       adress: res.formattedAddress,  // 地址名称
-      //       lat: lnglat[1], // 纬度lat
-      //       lng: lnglat[0] // 经度lng
-      //     }
-      //     console.log(res,'resees')
-      //     formattedAddress.value = res.formattedAddress
-      //     position.value = data
-      //   }
-      // })
+      const poi = { 
+        Q:e.lnglat.lat,
+        R:e.lnglat.lng,
+        lng:e.lnglat.lng,
+        lat:e.lnglat.lat,
+      }
+      setMarker(poi)
+      setGeocoder(lnglat)
     })
   }
 
-  const addAMapGeolocation = () => {
-    map.plugin('AMap.Geolocation',() => {  
-      const geolocation = new AMap.Geolocation({
-        // 是否使用高精度定位，默认：true
-        enableHighAccuracy: true,
-        // 设置定位超时时间，默认：无穷大
-        timeout: 10000,
-        // 定位按钮的停靠位置的偏移量，默认：Pixel(10, 20)
-        buttonOffset: new AMap.Pixel(200, 200),
-        //  定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
-        zoomToAccuracy: true,
-        //  定位按钮的排放位置,  RB表示右下
-        buttonPosition: 'RB'
-      })
-      geolocation.getCurrentPosition()
-      console.log(geolocation.getCurrentPosition())
-      AMap.event.addListener(
-        geolocation,
-        'complete',
-        onCurrentPositionComplete
-      )
+  // *设置标记
+  const setMarker = (poi) => {
+    map.remove(marker)
+    marker.setMap(map)
+    marker.setPosition(poi)
+    map.setCenter(marker.getPosition())
+    lnglat = [poi.lng , poi.lat]
+  }
+  // *设置地理编码
+  const setGeocoder = (lnglat) => {
+    geocoder.value.getAddress(lnglat, (status, result) => {
+      if (status === 'complete' && result.regeocode) {
+        address.value = result.regeocode.formattedAddress
+        marker.setLabel({
+          offset: new AMap.Pixel(1, 0), //设置文本标注偏移量
+          content: address.value,
+          direction: 'top', //设置文本标注方位
+        })
+      }
     })
   }
 
-  const onCurrentPositionComplete = (res) => {
-    setMaker()
-    console.log(res)
-  }
-
-  const searchValue = ref('')
-  const placeSearch = ref('')
-  const addAMapAutocompletePlaceSearch = () => {
-    map.plugin('AMap.Autocomplete', () => {
-      const auto = new AMap.Autocomplete({
-        input: 'search-input'
-      })
-      // 添加检索监听
-      AMap.event.addListener(auto, 'select', onSelectAutocomplete)
+  // *初始化小地图
+  let miniMap:any = null
+  let miniMarker:any = null
+  const miniMapInit = async() => {
+    const res = await plugin()
+    AMap = res
+    miniMarker = new AMap.Marker()
+    miniMap = new AMap.Map('container-mini', {
+      zoom: 18,
+      viewMode: '3D',
+      center: lonlat.value || [120.5644,27.6025],
+      pitch: 50,
+      rotation: 35,
+      resizeEnable: true,
     })
-    AMap.service(['AMap.PlaceSearch'], () => {
-      // 构造地点查询类
-      placeSearch.value = new AMap.PlaceSearch({
-        type: '', // 兴趣点类别
-        pageSize: 5, // 单页显示结果条数
-        pageIndex: 1, // 页码
-        citylimit: false, // 是否强制限制在设置的城市内搜索
-        map: map, // 展现结果的地图实例
-        panel: 'searchResultPanel', // 结果列表将在此容器中进行展示。
-        autoFitView: true // 是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
-      })
-    })
-
-    AMap.event.addListener(
-      placeSearch.value,
-      'listElementClick',
-      onSelectSearch
-    )
+    if(lonlat.value && lonlat.value.length > 0){
+      miniMap.remove(miniMarker)
+      miniMarker.setMap(miniMap)
+      miniMarker.setPosition([lonlat.value[0],lonlat.value[1]])
+      miniMap.setCenter(miniMarker.getPosition())
+    }
   }
-
-  const onSelectSearch = (e) => {
-    console.log(e , 'e')
-  }
-
-  const onSelectAutocomplete = (e) => {
-    console.log(e)
-  }
-
-
-
-
-
-
-
-
 
   watchEffect(() => {
     if(visible.value){
       mapInit()
     }
+    if(lonlat.value){
+      miniMapInit()
+    }
   })
 
-  const handleMarker = (lng,lat) => {
-    let marker = new AMap.Marker({
-      position: new AMap.LngLat(lng,lat),   // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
-      title: '北京'
-    })
-    map.add(marker)
-    map.setFitView()
-  }
+  onMounted(() => {
+    miniMapInit()
+  })
 
-  const handleEvent = (e) => {
-    const { lnglat } = e
-    handleMarker(lnglat.lng ,lnglat.lat)
+  const handleConfirm = () => {
+    lonlat.value = lnglat
+    visible.value = false
+    emits('getAddress',address.value)
   }
 
   const close = () => {
     map.destroy()
-    // map.value = null
-    // AMap.value = null
   }
-  
+
 
 </script>
 
-<style scoped>
-#container {
-  width:100%;
+<style lang='scss' scoped>
+#container{
+  width: 100%;
   height: 500px;
-  overflow: hidden;
+  ::v-deep .amap-logo{
+    display: none !important;//去掉高德地图logo
+  }
+  ::v-deep .amap-copyright {
+    opacity:0;//去掉高德的版本号
+  }
+}
+
+#container-mini{
+  margin-right: 20px;
+  ::v-deep .amap-logo{
+    display: none !important;//去掉高德地图logo
+  }
+}
+
+#pickerBox {
+  position: absolute;
+  z-index: 9999;
+  top: 90px;
+  right: 30px;
+  width: 300px;
+  ::v-deep .amap-ui-poi-picker-sugg-container{
+    max-height: 300px !important;
+  }
+}
+
+#pickerInput {
+  width: 200px;
+  padding: 5px 5px;
+}
+
+#poiInfo {
+  background: #fff;
+}
+
+.amap_lib_placeSearch .poibox.highlight {
+  background-color: #CAE1FF;
+}
+
+.amap_lib_placeSearch .poi-more {
+  display: none!important;
+}
+
+.map{
+  display: flex;
+  align-items: center;
 }
 </style>
